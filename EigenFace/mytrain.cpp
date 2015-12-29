@@ -11,7 +11,7 @@ int main()
 	int cols, rows;
 	int N; //单幅图片像素
 	//vector<IplImage> images; //定义容器来存放M张训练图片
-	IplImage* temp = cvLoadImage("./train/s1/1.pgm");
+	IplImage* temp = cvLoadImage("./train/s1/5.pgm");
 	rows = cvGetSize(temp).height;
 	cols = cvGetSize(temp).width;
 	N = cols*rows;
@@ -21,7 +21,7 @@ int main()
 	for (int i = 1; i <= M; i++)
 	{
 		char filename[50];
-		sprintf(filename, "./train/s%d/1.pgm", i);
+		sprintf(filename, "./train/s%d/5.pgm", i);
 		IplImage* image;
 		image = cvLoadImage(filename);
 		IplImage* image_gray = cvCreateImage(cvGetSize(image), IPL_DEPTH_8U, 1); //单通道灰度
@@ -180,6 +180,7 @@ int main()
 	//把基底空间eigenface 和 训练集照片的投影坐标traincoeff写入model文件
 	cvSave("eigenface.txt", eigenface);
 	cvSave("traincoeff.txt", TrainCoeff);
+	cvSave("meanface.txt", mean_face);
 
 	//CvMat* Mat1 = cvCreateMat(2, 2, CV_64FC1);   //对每个像素 构造一个2*2大小的M
 	//cvSetReal2D(Mat1, 0, 0, 1);
