@@ -7,11 +7,11 @@ using namespace std;
 
 int main()
 {
-	int M=4;
+	int M=40;
 	int cols, rows;
 	int N; //单幅图片像素
 	//vector<IplImage> images; //定义容器来存放M张训练图片
-	IplImage* temp = cvLoadImage("./train/1.jpg");
+	IplImage* temp = cvLoadImage("./train/s1/1.pgm");
 	rows = cvGetSize(temp).height;
 	cols = cvGetSize(temp).width;
 	N = cols*rows;
@@ -21,7 +21,7 @@ int main()
 	for (int i = 1; i <= M; i++)
 	{
 		char filename[50];
-		sprintf(filename, "./train/%d.jpg", i);
+		sprintf(filename, "./train/s%d/1.pgm", i);
 		IplImage* image;
 		image = cvLoadImage(filename);
 		IplImage* image_gray = cvCreateImage(cvGetSize(image), IPL_DEPTH_8U, 1); //单通道灰度
@@ -43,6 +43,7 @@ int main()
 			cvSetReal2D(S, j, i-1, value);  //S的一列就是一张图片。
 			//cout << value << "/";  //这里value都挺正常的
 		}
+		cout << i << " iofM" << endl;
 	}
 
 	//对S中列向量求和，进而求出平均人脸
@@ -57,8 +58,8 @@ int main()
 	// 求均值,数乘1/M
 	cvConvertScale(mean_face, mean_face, 1.0 / M);
 
-	/*取出S的一列进行重构测试*/
-	IplImage* mean_show = cvCreateImage(cvSize(cols, rows),IPL_DEPTH_8U,1);
+	/*平均人脸测试*/
+	IplImage* mean_show = cvCreateImage(cvSize(rows, cols),IPL_DEPTH_8U,1);
 	//IplImage* mean_show;
 	IplImage mean_show_hdr;
 	CvMat* mean_reshape = cvCreateMat(rows, cols, CV_8UC1);
@@ -135,9 +136,50 @@ int main()
 	
 	//eigenface空间构建完毕
 
-	//基底构建完了？tempVector的每一列是特征人脸？
+	//基底构建完了？eigenface的每一列是特征人脸？
 
+	/*显示第一张特征人脸，显示成功*/
+	/*
+	CvMat* FirstCol = cvCreateMat(N, 1, CV_32FC1);
+	//cvGetCol(eigenface, FirstCol, 0);  //改掉这个就对了。。。
+	for (int i = 0; i < N; i++){
+		float value = cvGetReal2D(eigenface, i, 0);
+		cvSetReal2D(FirstCol, i, 0, value);
+	}
+	// 将first_reshape映射在0-255
+	cvNormalize(FirstCol, FirstCol, 255, 0, CV_MINMAX);
+	CvMat* First_reshape = cvCreateMat(rows, cols, CV_32FC1);
+	CvMat first_hdr;
+	First_reshape = cvReshape(FirstCol, &first_hdr, 1, rows);
+	IplImage* first_show = cvCreateImage(cvSize(rows,cols),IPL_DEPTH_8U,1);
+	IplImage first_show_hdr;
+	first_show = cvGetImage(&first_hdr, &first_show_hdr);
+	cvShowImage("firstcol", first_show);
+	cvSaveImage("./output/firstcol.jpg", first_show);
+	*/
+	cout << "calculate taincoeff" << endl;
 	//计算训练集中的照片在基底上的投影坐标。
+	CvMat* TrainCoeff = cvCreateMat(M, M, CV_32FC1);
+	for (int i = 0; i < M; i++){
+		CvMat* temp = cvCreateMat(N, 1, CV_32FC1);
+		cvGetCol(S, temp, i);
+		CvMat* tempT = cvCreateMat(1, N, CV_32FC1);
+		cvTranspose(temp, tempT);
+		CvMat* c = cvCreateMat(1, M, CV_32FC1);
+		cvMatMul(tempT, eigenface, c);  //和基底相乘
+		CvMat* cT = cvCreateMat(M, 1, CV_32FC1);
+		cvTranspose(c, cT);
+		// 把cT加到TrainCoeff中
+		for (int j = 0; j < M; j++){
+			float value = cvGetReal2D(cT, j, 0);
+			cvSetReal2D(TrainCoeff, j, i, value);
+		}
+		cout << i << "zuobiao/";
+	}
+	cout << "write txt" << endl;
+	//把基底空间eigenface 和 训练集照片的投影坐标traincoeff写入model文件
+	cvSave("eigenface.txt", eigenface);
+	cvSave("traincoeff.txt", TrainCoeff);
 
 	//CvMat* Mat1 = cvCreateMat(2, 2, CV_64FC1);   //对每个像素 构造一个2*2大小的M
 	//cvSetReal2D(Mat1, 0, 0, 1);
