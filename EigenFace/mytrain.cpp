@@ -87,6 +87,7 @@ int main(int argc, char* argv[])
 			<< "argv[2]: file name, eg: eigenface.txt" << endl
 			<< "argv[3]: file name, eg: traincoeff.txt" << endl
 			<< "argv[4]: file name, eg: meanface.txt" << endl;
+		return -1;
 	}
 
 	//循环载入训练图片，构建出N*M矩阵S
